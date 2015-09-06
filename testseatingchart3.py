@@ -4,37 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 
-guests = ["Antonette",  
-          "Cinda",  
-          "Nathan",  
-          "Deidra", 
-          "Merna",  
-          "Renata",  
-          "Londa",  
-          "Lila",  
-          "Kathryne",  
-          "Lieselotte",  
-          "Teofila",  
-          "Hubert",  
-          "Isadora",  
-          "Elina",  
-          "Enola",  
-          "Emile",  
-          "Brendan",  
-          "Kit",  
-          "Deetta",  
-          "Jade"
-          ]
+guestlist = sc.GuestList()
+guestlist.fromExcel('people6.xlsx')
+guestlist.print_friendlist()
 
-guestlist = sc.GuestList(guestnames=guests)
-for i,g in enumerate(guests):
-    gn = guests.pop(i)
-    friends = random.sample(guests,10)
-    guests.insert(i,gn)
 
-    guestlist.guestdict[gn].set_friendnames(friends)
-
-nguests = len(guests)
+nguests = len(guestlist.guests)
 seatsper = 5
 
 chart = sc.SeatingChart(guestlist,nguests/seatsper,seatsper)
@@ -82,6 +57,10 @@ plt.plot(steps, friendsT3,label='T3')
 plt.legend( loc='upper left')
 plt.xlabel="step"
 plt.ylabel="friendships"
+
+org0.sc.to_excel('SeatingChart0.xlsx')
+org1.sc.to_excel('SeatingChart1.xlsx')
+
 
 plt.show()
 

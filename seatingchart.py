@@ -8,6 +8,7 @@ Modifications:
 """
 import random
 import numpy as np
+import pandas
 #Make classes 
 
 class Guest():
@@ -54,6 +55,26 @@ class GuestList():
         else:
             self.guests = [Guest(name) for name in guestnames]
         self.guestdict = {g.get_name():g for g in self.guests}
+
+    def fromExcel(self, excelfile):
+        peopledf = pandas.read_excel(excelfile)
+        #Read in all the names
+        allnames = set()
+        for column in peopledf[1:]:
+            for rownum in peopledf.index:
+                name = peopledf.iloc[rownum][column]
+                #print rownum, column, name
+                if name is np.nan:
+                    continue
+                allnames.add(name)
+        self.guests = [Guest(name) for name in allnames]
+        self.guestdict = {g.get_name():g for g in self.guests}
+
+        #Find all the friends
+        for rownum in peopledf.index:
+            friends = [str(name) for name in peopledf.iloc[rownum].values if name is not np.nan]
+            [self.guestdict[friend].set_friendnames(friends) for friend in friends]
+
 
     def insert_guest(self,guest):
         self.guests.append(guest)
@@ -178,6 +199,11 @@ class SeatingChart():
         for n in self.seated:
             index = self.seatdict[n]
             print (n,index)
+
+    def to_excel(self, outfile='SeatingChart.xlsx'):
+        chartdf = pandas.DataFrame(self.chart)
+        chartdf.index = ["Table {0}".format(i) for i in chartdf.index]
+        chartdf.to_excel(outfile)
 
         
 class Organizer():
