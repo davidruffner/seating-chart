@@ -26,18 +26,13 @@ guests = ["Antonette",
           "Jade"
           ]
 
-guestlist = sc.GuestList()
+guestlist = sc.GuestList(guestnames=guests)
 for i,g in enumerate(guests):
-    gobj = sc.Guest()
-    gobj.set_name(g)
-    
-    gn=guests.pop(i)
+    gn = guests.pop(i)
     friends = random.sample(guests,10)
     guests.insert(i,gn)
 
-    gobj.set_friendnames(friends)
-
-    guestlist.insert_guest(gobj)
+    guestlist.guestdict[gn].set_friendnames(friends)
 
 nguests = len(guests)
 seatsper = 5

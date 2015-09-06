@@ -11,9 +11,24 @@ import numpy as np
 #Make classes 
 
 class Guest():
-    def __init__(self):
-        self.name = "Guest"
-        self.friendnames = list()
+    def __init__(self, name, friends=None):
+        """
+        Constructs a guest object
+
+        Inputs
+        -----
+        :param name:
+        :param friends:
+
+        Outputs
+        ------
+        :return:
+        """
+        self.name = name
+        if friends is None:
+            self.friendnames = list()
+        else:
+            self.set_friendnames(friends)
         
     def set_name(self,newname):
         self.name = newname
@@ -28,8 +43,16 @@ class Guest():
         return self.friendnames
 
 class GuestList():
-    def __init__(self):
-        self.guests = list()
+    def __init__(self,guestnames=None):
+        """
+        Guest list constructor
+        :param guestnames: list
+        :return:
+        """
+        if guestnames is None:
+            self.guests = list()
+        else:
+            self.guests = [Guest(name) for name in guestnames]
         self.guestdict = {g.get_name():g for g in self.guests}
 
     def insert_guest(self,guest):
