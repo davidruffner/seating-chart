@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import pandas
+import matplotlib.pyplot as plt
 
 """
 This simple program will try to sort out a seating chart from a list of
@@ -139,6 +140,9 @@ class SeatingChart(object):
 
     def seat_guest(self, guestname):
         n = guestname
+        if len(self.open) == 0:
+            print "No more seats!"
+            return
         seatindex = self.open.pop(random.randrange(len(self.open)))
         self.chart[seatindex[0]][seatindex[1]] = n
 
@@ -148,19 +152,18 @@ class SeatingChart(object):
         self.toseat.remove(n)
 
     def seat_guest_here(self, guestname, index):
-        n = guestname
         # check if the seat is open
         if self.open.count(index) == 0:
             print "the seat is already filled!!"
             return None
         else:
             self.open.remove(index)
-        self.chart[index[0]][index[1]] = n
+        self.chart[index[0]][index[1]] = guestname
 
         # update the seatdict, and seated
-        self.seated.append(n)
-        self.seatdict[n] = index
-        self.toseat.remove(n)
+        self.seated.append(guestname)
+        self.seatdict[guestname] = index
+        self.toseat.remove(guestname)
 
     def seat_guestfriend(self, guestname, friendname):
         """
@@ -355,3 +358,55 @@ class Organizer(object):
             else:
                 print "it's temporarily worse but keep it"
                 return friendcount1
+
+def main(excelfilein,excelfileout):
+    guestlist = GuestList()
+    guestlist.fromExcel(excelfilein)
+    guestlist.print_friendlist()
+
+
+    nguests = len(guestlist.guests)
+    print nguests
+    seatsper = 8
+    print nguests/seatsper
+
+    chart = SeatingChart(guestlist, nguests/seatsper+1, seatsper)
+    org = Organizer(guestlist, chart)
+    # Seat everyone
+    print "Seat guests with a friend"
+    org.seatguestsfriends()
+    print "now do Metropolis algorithim to increase friendships"
+    count0 = org.friendcount()
+    nsteps = 1000
+    friendsT1 = np.zeros(nsteps)
+    steps = np.arange(nsteps)
+    for i in steps:
+        print i
+        friendsT1[i] = org.metropolisstep(temp=0.01)
+    count1 = org.friendcount()
+    print "Metropolis algorithm added {0} friends".format(count1-count0)
+    print "export seating chart to an excel file"
+    plt.plot(steps, friendsT1, label='T1')
+    plt.xlabel = "step"
+    plt.ylabel = "friendships"
+    plt.show()
+    org.sc.to_excel(excelfileout)
+
+
+if __name__ == '__main__':
+    import sys
+    umesg = "python -m seatingchart.seatingchar excelfilein (excelfileout)"
+    if len(sys.argv) > 1:
+        # print 'nothing here'
+        if len(sys.argv) > 2:
+            excelfilein = sys.argv[1]
+            excelfileout = sys.argv[2]
+            main(excelfilein, excelfileout)
+        else:
+            excelfilein = sys.argv[1]
+            excelfileout = excelfilein[:-5]+"out"+excelfilein[-5:]
+            main(excelfilein, excelfileout)
+    else:
+        print umesg
+
+

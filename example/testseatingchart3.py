@@ -19,7 +19,7 @@ print "Guests to be seated and their friends"
 org = sc.Organizer(guestlist, chart)
 org0 = sc.Organizer(guestlist, chart0)
 # Seat everyone
-org.seatguests()
+org.seatguestsfriends()
 
 print "The final seating chart"
 chart.print_seatingchart()
