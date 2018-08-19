@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import pandas
-import matplotlib.pyplot as plt
 
 """
 This simple program will try to sort out a seating chart from a list of
@@ -74,7 +73,7 @@ class GuestList(object):
         for column in peopledf[1:]:
             for rownum in peopledf.index:
                 name = peopledf.iloc[rownum][column]
-                # print rownum, column, name
+                # print(rownum, column, name)
                 if name is np.nan:
                     continue
                 allnames.add(name)
@@ -93,13 +92,13 @@ class GuestList(object):
     def print_list(self):
         for guest in self.guests:
             name = guest.get_name()
-            print name
+            print(name)
 
     def print_friendlist(self):
         for guest in self.guests:
             name = guest.get_name()
             friends = guest.get_friendnames()
-            print name + ":" + ",".join(friends)
+            print(name + ":" + ",".join(friends))
 
 
 class SeatingChart(object):
@@ -135,13 +134,13 @@ class SeatingChart(object):
                 pass
             else:
                 return f
-        print "The schmuck has no friends or they are already seated"
+        print("The schmuck has no friends or they are already seated")
         return None
 
     def seat_guest(self, guestname):
         n = guestname
         if len(self.open) == 0:
-            print "No more seats!"
+            print("No more seats!")
             return
         seatindex = self.open.pop(random.randrange(len(self.open)))
         self.chart[seatindex[0]][seatindex[1]] = n
@@ -154,7 +153,7 @@ class SeatingChart(object):
     def seat_guest_here(self, guestname, index):
         # check if the seat is open
         if self.open.count(index) == 0:
-            print "the seat is already filled!!"
+            print("the seat is already filled!!")
             return None
         else:
             self.open.remove(index)
@@ -218,12 +217,12 @@ class SeatingChart(object):
         return [n, index]
 
     def print_chart(self):
-        print self.chart
+        print(self.chart)
 
     def print_seatingchart(self):
         for n in self.seated:
             index = self.seatdict[n]
-            print (n, index)
+            print((n, index))
 
     def to_excel(self, outfile='SeatingChart.xlsx'):
         chartdf = pandas.DataFrame(self.chart)
@@ -242,12 +241,12 @@ class Organizer(object):
         This method seats all of the guests randomly
         :return:
         """
-        print "Seating guests and their friends"
+        print("Seating guests and their friends")
         nguests = len(self.gl.guests)
         for i in xrange(nguests):
             randguest = self.sc.pick_rand()
             if randguest is None:
-                print "exit for loop"
+                print("exit for loop")
                 break
             else:
                 self.sc.seat_guest(randguest)
@@ -258,25 +257,25 @@ class Organizer(object):
         :return:
         """
         # at the same table
-        print "Seating guests and their friends"
+        print("Seating guests and their friends")
         nguests = len(self.gl.guests)
         for i in xrange(nguests):
             randguestname = self.sc.pick_rand()
             if randguestname is None:
-                print "exit for loop"
+                print("exit for loop")
                 break
             rgn = randguestname
             self.sc.seat_guest(rgn)
             randguest = self.gl.guestdict[rgn]
             friends = randguest.get_friendnames()
-            print "Seated " + rgn + ", seating friends also..."
+            print("Seated " + rgn + ", seating friends also...")
             for f in friends:
                 friend = self.sc.pick_friend_of(randguestname)
                 if not (friend is None):
                     seatindex = self.sc.seat_guestfriend(rgn, friend)
                     if seatindex is None:
                         self.sc.seat_guest(friend)
-                        print "There is no room at the table for the friend"
+                        print("There is no room at the table for the friend")
 
     def tablefriendcount(self, tablenum):
         count = 0
@@ -341,7 +340,7 @@ class Organizer(object):
 
         if friendcount1 >= friendcount0:
             # If there are more friends than keep the switch!
-            print "Made the switch"
+            print("Made the switch")
             return friendcount1
         else:
             delfriends = friendcount1 - friendcount0
@@ -349,14 +348,14 @@ class Organizer(object):
             rand = random.random()
             if rand >= expdelfriends:
                 # if there are fewer friends then put it back
-                print "better to keep the old way"
+                print("better to keep the old way")
                 self.sc.remove_guest_here(info1[0], info2[1])
                 self.sc.remove_guest_here(info2[0], info1[1])
                 self.sc.seat_guest_here(info1[0], info1[1])
                 self.sc.seat_guest_here(info2[0], info2[1])
                 return friendcount0
             else:
-                print "it's temporarily worse but keep it"
+                print("it's temporarily worse but keep it")
                 return friendcount1
 
 def main(excelfilein,excelfileout):
@@ -366,30 +365,26 @@ def main(excelfilein,excelfileout):
 
 
     nguests = len(guestlist.guests)
-    print nguests
+    print(nguests)
     seatsper = 8
-    print nguests/seatsper
+    print(nguests/seatsper)
 
     chart = SeatingChart(guestlist, nguests/seatsper+1, seatsper)
     org = Organizer(guestlist, chart)
     # Seat everyone
-    print "Seat guests with a friend"
+    print("Seat guests with a friend")
     org.seatguestsfriends()
-    print "now do Metropolis algorithim to increase friendships"
+    print("now do Metropolis algorithim to increase friendships")
     count0 = org.friendcount()
     nsteps = 1000
     friendsT1 = np.zeros(nsteps)
     steps = np.arange(nsteps)
     for i in steps:
-        print i
+        print(i)
         friendsT1[i] = org.metropolisstep(temp=0.01)
     count1 = org.friendcount()
-    print "Metropolis algorithm added {0} friends".format(count1-count0)
-    print "export seating chart to an excel file"
-    plt.plot(steps, friendsT1, label='T1')
-    plt.xlabel = "step"
-    plt.ylabel = "friendships"
-    plt.show()
+    print("Metropolis algorithm added {0} friends".format(count1-count0))
+    print("export seating chart to an excel file")
     org.sc.to_excel(excelfileout)
 
 
@@ -397,7 +392,7 @@ if __name__ == '__main__':
     import sys
     umesg = "python -m seatingchart.seatingchar excelfilein (excelfileout)"
     if len(sys.argv) > 1:
-        # print 'nothing here'
+        # print('nothing here')
         if len(sys.argv) > 2:
             excelfilein = sys.argv[1]
             excelfileout = sys.argv[2]
@@ -407,6 +402,4 @@ if __name__ == '__main__':
             excelfileout = excelfilein[:-5]+"out"+excelfilein[-5:]
             main(excelfilein, excelfileout)
     else:
-        print umesg
-
-
+        print(umesg)
