@@ -1,17 +1,17 @@
-import seatingchart.seatingchart as sc
+import seatingChart.seatingchart as sc
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
 
 guestlist = sc.GuestList()
-guestlist.fromExcel('people6.xlsx')
+guestlist.fromCSV('example/people.csv')
 guestlist.print_friendlist()
 
 
 nguests = len(guestlist.guests)
 seatsper = 5
 
-chart = sc.SeatingChart(guestlist, nguests/seatsper, seatsper)
+chart = sc.SeatingChart(guestlist, nguests//seatsper, seatsper)
 chart0 = copy.deepcopy(chart)
 print('')
 print("Guests to be seated and their friends")
@@ -55,8 +55,8 @@ plt.legend(loc='upper left')
 plt.xlabel = "step"
 plt.ylabel = "friendships"
 
-org0.sc.to_excel('SeatingChart0.xlsx')
-org1.sc.to_excel('SeatingChart1.xlsx')
+org0.sc.to_csv('SeatingChart0.xlsx')
+org1.sc.to_csv('SeatingChart1.xlsx')
 
 
 plt.show()

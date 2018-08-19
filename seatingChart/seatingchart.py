@@ -56,23 +56,23 @@ class GuestList(object):
             self.guests = [Guest(name) for name in guestnames]
         self.guestdict = {g.get_name(): g for g in self.guests}
 
-    def fromExcel(self, excelfile):
+    def fromCSV(self, csvfile):
         """
-        Imports a guest list from an excel file.
+        Imports a guest list from an csv file.
 
         The file should have the guest names on the leftmost column and then
         friend names in adjacent columns
 
         Uses python pandas for the import. It also won't repeat names.
 
-        :param excelfile:
+        :param csvfile:
         """
-        peopledf = pandas.read_excel(excelfile)
+        peopledf = pandas.read_csv(csvfile)
         # Read in all the names
         allnames = set()
-        for column in peopledf[1:]:
+        for column in peopledf.columns:
             for rownum in peopledf.index:
-                name = peopledf.iloc[rownum][column]
+                name = peopledf.loc[rownum][column]
                 # print(rownum, column, name)
                 if name is np.nan:
                     continue
@@ -82,7 +82,9 @@ class GuestList(object):
 
         # Find all the friends
         for rownum in peopledf.index:
-            friends = [str(name) for name in peopledf.iloc[rownum].values if name is not np.nan]
+            friends = [str(name) for name in peopledf.loc[rownum].values if name is not np.nan]
+            print('friends', friends)
+            # TODO: Is this correct?
             [self.guestdict[friend].set_friendnames(friends) for friend in friends]
 
     def insert_guest(self, guest):
@@ -109,9 +111,9 @@ class SeatingChart(object):
         :param tables: int number of tables
         :param seatper: int number of people per table
         """
-        self.chart = [['' for x in xrange(seatper)] for y in xrange(tables)]
+        self.chart = [['' for x in range(seatper)] for y in range(tables)]
         self.seatdict = dict()
-        self.open = [(y, x) for x in xrange(seatper) for y in xrange(tables)]
+        self.open = [(y, x) for x in range(seatper) for y in range(tables)]
         self.seated = list()
         self.toseat = [g.get_name() for g in guestlist.guests]
         self.gl = guestlist
@@ -224,10 +226,10 @@ class SeatingChart(object):
             index = self.seatdict[n]
             print((n, index))
 
-    def to_excel(self, outfile='SeatingChart.xlsx'):
+    def to_csv(self, outfile='SeatingChart.csv'):
         chartdf = pandas.DataFrame(self.chart)
         chartdf.index = ["Table {0}".format(i) for i in chartdf.index]
-        chartdf.to_excel(outfile)
+        chartdf.to_csv(outfile)
 
 
 class Organizer(object):
@@ -243,7 +245,7 @@ class Organizer(object):
         """
         print("Seating guests and their friends")
         nguests = len(self.gl.guests)
-        for i in xrange(nguests):
+        for i in range(nguests):
             randguest = self.sc.pick_rand()
             if randguest is None:
                 print("exit for loop")
@@ -259,7 +261,7 @@ class Organizer(object):
         # at the same table
         print("Seating guests and their friends")
         nguests = len(self.gl.guests)
-        for i in xrange(nguests):
+        for i in range(nguests):
             randguestname = self.sc.pick_rand()
             if randguestname is None:
                 print("exit for loop")
@@ -294,7 +296,7 @@ class Organizer(object):
     def friendcount(self):
         count = 0
         ntables = len(self.sc.chart)
-        for i in xrange(ntables):
+        for i in range(ntables):
             count += self.tablefriendcount(i)
         return count
 
@@ -358,9 +360,9 @@ class Organizer(object):
                 print("it's temporarily worse but keep it")
                 return friendcount1
 
-def main(excelfilein,excelfileout):
+def main(csvfilein,csvfileout):
     guestlist = GuestList()
-    guestlist.fromExcel(excelfilein)
+    guestlist.fromCSV(csvfilein)
     guestlist.print_friendlist()
 
 
@@ -369,7 +371,7 @@ def main(excelfilein,excelfileout):
     seatsper = 8
     print(nguests/seatsper)
 
-    chart = SeatingChart(guestlist, nguests/seatsper+1, seatsper)
+    chart = SeatingChart(guestlist, nguests//seatsper+1, seatsper)
     org = Organizer(guestlist, chart)
     # Seat everyone
     print("Seat guests with a friend")
@@ -384,22 +386,22 @@ def main(excelfilein,excelfileout):
         friendsT1[i] = org.metropolisstep(temp=0.01)
     count1 = org.friendcount()
     print("Metropolis algorithm added {0} friends".format(count1-count0))
-    print("export seating chart to an excel file")
-    org.sc.to_excel(excelfileout)
+    print("export seating chart to an csv file")
+    org.sc.to_csv(csvfileout)
 
 
 if __name__ == '__main__':
     import sys
-    umesg = "python -m seatingchart.seatingchar excelfilein (excelfileout)"
+    umesg = "python -m seatingchart.seatingchar csvfilein (csvfileout)"
     if len(sys.argv) > 1:
         # print('nothing here')
         if len(sys.argv) > 2:
-            excelfilein = sys.argv[1]
-            excelfileout = sys.argv[2]
-            main(excelfilein, excelfileout)
+            csvfilein = sys.argv[1]
+            csvfileout = sys.argv[2]
+            main(csvfilein, csvfileout)
         else:
-            excelfilein = sys.argv[1]
-            excelfileout = excelfilein[:-5]+"out"+excelfilein[-5:]
-            main(excelfilein, excelfileout)
+            csvfilein = sys.argv[1]
+            csvfileout = csvfilein[:-5]+"out"+csvfilein[-5:]
+            main(csvfilein, csvfileout)
     else:
         print(umesg)
