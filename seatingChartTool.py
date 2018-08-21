@@ -14,8 +14,13 @@ app = dash.Dash()
 app.scripts.config.serve_locally = True
 # app.css.config.serve_locally = True
 
+NUM_TABLES = 15
 GUEST_LIST = pd.read_csv('example/people.csv')
-GUEST_LIST['Table'] = np.random.randint(1, 10, size=len(GUEST_LIST))
+NUM_GUESTS = len(GUEST_LIST)
+GUESTS_PER_TABLE = NUM_GUESTS // NUM_TABLES
+NUM_LEFTOVER_GUESTS = NUM_GUESTS % NUM_TABLES
+GUEST_LIST['Table'] = 1 + np.arange(0, NUM_GUESTS) // (GUESTS_PER_TABLE + 1 if NUM_LEFTOVER_GUESTS else 0)
+
 
 
 app.layout = html.Div([
