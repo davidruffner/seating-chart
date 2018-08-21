@@ -43,20 +43,20 @@ app.layout = html.Div([
 ], className='container')
 
 
-# @app.callback(
-#     Output('guestList', 'selected_row_indices'),
-#     [Input('graph-gapminder', 'clickData')],
-#     [State('guestList', 'selected_row_indices')])
-# def update_selected_row_indices(clickData, selected_row_indices):
-#     if clickData:
-#         for point in clickData['points']:
-#             if point['pointNumber'] in selected_row_indices:
-#                 selected_row_indices.remove(point['pointNumber'])
-#             else:
-#                 selected_row_indices.append(point['pointNumber'])
-#     return selected_row_indices
-#
-#
+@app.callback(
+    Output('guest-list', 'selected_row_indices'),
+    [Input('graph-guest-sorter', 'clickData')],
+    [State('guest-list', 'selected_row_indices')])
+def update_selected_row_indices(clickData, selected_row_indices):
+    if clickData:
+        for point in clickData['points']:
+            if point['pointNumber'] in selected_row_indices:
+                selected_row_indices.remove(point['pointNumber'])
+            else:
+                selected_row_indices.append(point['pointNumber'])
+    return selected_row_indices
+
+
 @app.callback(
     Output('graph-guest-sorter', 'figure'),
     [Input('guest-list', 'rows'),
@@ -68,21 +68,26 @@ def update_figure(rows, selected_row_indices):
         lg = len(tableGroup)
         df.loc[tableGroup.index, 'x'] = tableNum // 2
         df.loc[tableGroup.index, 'y'] = tableNum % 2 + .9 * np.arange(lg)/float(lg)
-        df.loc[tableGroup.index]
 
     return {
         'data': [go.Scatter(
             x=df['x'],
             y=df['y'],
             text=[n[0:10] for n in df['Guest Name']],
-            customdata=df['friend1'],
+            customdata=df.index,
             mode='markers+text',
             textposition='middle right',
             marker={
                 'size': 15,
                 'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
+                'line': {'width': 0.5, 'color': 'white'},
+            },
+            selectedpoints=selected_row_indices,
+            selected={
+                'marker': {
+                    'color': 'rgba(255, 0, 0, 1.)',
+                }
+            },
         )],
         'layout': go.Layout(
             xaxis={
