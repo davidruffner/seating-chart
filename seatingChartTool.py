@@ -14,8 +14,10 @@ app = dash.Dash()
 app.scripts.config.serve_locally = True
 # app.css.config.serve_locally = True
 
+# TODO: Guest list data should only be in the displayed table (No global state!)
 NUM_TABLES = 15
-GUEST_LIST = pd.read_csv('example/people.csv')
+GUEST_LIST = pd.read_csv('example/guestlist.csv')
+GUEST_LIST['friends'] = ''
 NUM_GUESTS = len(GUEST_LIST)
 GUESTS_PER_TABLE = NUM_GUESTS // NUM_TABLES
 NUM_LEFTOVER_GUESTS = NUM_GUESTS % NUM_TABLES
@@ -37,11 +39,21 @@ app.layout = html.Div([
         id='guest-list'
     ),
     html.Div(id='Sorter'),
+    html.Button(id='button-friend', n_clicks=0, children='Make friends'),
     dcc.Graph(
         id='graph-guest-sorter'
     ),
 ], className='container')
 
+
+
+# TODO: Callback for button
+# @app.callback(
+#     Output('guest-list', 'selected_row_indices'),
+#     [Input('submit-button', 'n_clicks')],
+#     [State('guest-list', 'selected_row_indices')])
+# )
+# def
 
 @app.callback(
     Output('guest-list', 'selected_row_indices'),
