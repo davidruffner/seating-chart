@@ -74,9 +74,10 @@ def update_figure(rows, selected_row_indices):
         'data': [go.Scatter(
             x=df['x'],
             y=df['y'],
-            text=df['Guest Name'],
+            text=[n[0:10] for n in df['Guest Name']],
             customdata=df['friend1'],
-            mode='markers',
+            mode='markers+text',
+            textposition='middle right',
             marker={
                 'size': 15,
                 'opacity': 0.5,
