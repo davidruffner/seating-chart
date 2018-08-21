@@ -7,112 +7,93 @@ import json
 import pandas as pd
 import numpy as np
 import plotly
+import plotly.graph_objs as go
 
 app = dash.Dash()
 
 app.scripts.config.serve_locally = True
 # app.css.config.serve_locally = True
 
-DF_WALMART = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/1962_2006_walmart_store_openings.csv')
-
-DF_GAPMINDER = pd.read_csv(
-    'https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv'
-)
-DF_GAPMINDER = DF_GAPMINDER[DF_GAPMINDER['year'] == 2007]
-DF_GAPMINDER.loc[0:20]
-
-DF_SIMPLE = pd.DataFrame({
-    'x': ['A', 'B', 'C', 'D', 'E', 'F'],
-    'y': [4, 3, 1, 2, 3, 6],
-    'z': ['a', 'b', 'c', 'a', 'b', 'c']
-})
-
-ROWS = [
-    {'a': 'AA', 'b': 1},
-    {'a': 'AB', 'b': 2},
-    {'a': 'BB', 'b': 3},
-    {'a': 'BC', 'b': 4},
-    {'a': 'CC', 'b': 5},
-    {'a': 'CD', 'b': 6}
-]
+GUEST_LIST = pd.read_csv('example/people.csv')
+GUEST_LIST['Table'] = np.random.randint(1, 10, size=len(GUEST_LIST))
 
 
 app.layout = html.Div([
-    html.H4('Gapminder DataTable'),
+    html.H4('Guest List'),
     dt.DataTable(
-        rows=DF_GAPMINDER.to_dict('records'),
+        rows=GUEST_LIST.to_dict('records'),
 
         # optional - sets the order of columns
-        columns=sorted(DF_GAPMINDER.columns),
-
+        # columns=sorted(DF_GAPMINDER.columns),
         row_selectable=True,
         filterable=True,
         sortable=True,
         selected_row_indices=[],
-        id='datatable-gapminder'
+        id='guest-list'
     ),
-    html.Div(id='selected-indexes'),
+    html.Div(id='Sorter'),
     dcc.Graph(
-        id='graph-gapminder'
+        id='graph-guest-sorter'
     ),
-], className="container")
+], className='container')
 
 
+# @app.callback(
+#     Output('guestList', 'selected_row_indices'),
+#     [Input('graph-gapminder', 'clickData')],
+#     [State('guestList', 'selected_row_indices')])
+# def update_selected_row_indices(clickData, selected_row_indices):
+#     if clickData:
+#         for point in clickData['points']:
+#             if point['pointNumber'] in selected_row_indices:
+#                 selected_row_indices.remove(point['pointNumber'])
+#             else:
+#                 selected_row_indices.append(point['pointNumber'])
+#     return selected_row_indices
+#
+#
 @app.callback(
-    Output('datatable-gapminder', 'selected_row_indices'),
-    [Input('graph-gapminder', 'clickData')],
-    [State('datatable-gapminder', 'selected_row_indices')])
-def update_selected_row_indices(clickData, selected_row_indices):
-    if clickData:
-        for point in clickData['points']:
-            if point['pointNumber'] in selected_row_indices:
-                selected_row_indices.remove(point['pointNumber'])
-            else:
-                selected_row_indices.append(point['pointNumber'])
-    return selected_row_indices
-
-
-@app.callback(
-    Output('graph-gapminder', 'figure'),
-    [Input('datatable-gapminder', 'rows'),
-     Input('datatable-gapminder', 'selected_row_indices')])
+    Output('graph-guest-sorter', 'figure'),
+    [Input('guest-list', 'rows'),
+     Input('guest-list', 'selected_row_indices')])
 def update_figure(rows, selected_row_indices):
-    dff = pd.DataFrame(rows)
-    fig = plotly.tools.make_subplots(
-        rows=3, cols=1,
-        subplot_titles=('Life Expectancy', 'GDP Per Capita', 'Population',),
-        shared_xaxes=True)
-    marker = {'color': ['#0074D9']*len(dff)}
-    for i in (selected_row_indices or []):
-        marker['color'][i] = '#FF851B'
-    fig.append_trace({
-        'x': dff['country'],
-        'y': dff['lifeExp'],
-        'type': 'bar',
-        'marker': marker
-    }, 1, 1)
-    fig.append_trace({
-        'x': dff['country'],
-        'y': dff['gdpPercap'],
-        'type': 'bar',
-        'marker': marker
-    }, 2, 1)
-    fig.append_trace({
-        'x': dff['country'],
-        'y': dff['pop'],
-        'type': 'bar',
-        'marker': marker
-    }, 3, 1)
-    fig['layout']['showlegend'] = False
-    fig['layout']['height'] = 800
-    fig['layout']['margin'] = {
-        'l': 40,
-        'r': 10,
-        't': 60,
-        'b': 200
+    df = pd.DataFrame(rows)
+
+    for tableNum, tableGroup in df.groupby('Table'):
+        lg = len(tableGroup)
+        df.loc[tableGroup.index, 'x'] = tableNum // 2
+        df.loc[tableGroup.index, 'y'] = tableNum % 2 + .9 * np.arange(lg)/float(lg)
+        df.loc[tableGroup.index]
+
+    return {
+        'data': [go.Scatter(
+            x=df['x'],
+            y=df['y'],
+            text=df['Guest Name'],
+            customdata=df['friend1'],
+            mode='markers',
+            marker={
+                'size': 15,
+                'opacity': 0.5,
+                'line': {'width': 0.5, 'color': 'white'}
+            }
+        )],
+        'layout': go.Layout(
+            xaxis={
+                'showgrid': False,
+                'zeroline': False,
+                'showticklabels': False,
+            },
+            yaxis={
+                'showgrid': False,
+                'zeroline': False,
+                'showticklabels': False,
+            },
+            margin={'l': 40, 'b': 30, 't': 10, 'r': 0},
+            height=450,
+            hovermode='closest'
+        )
     }
-    fig['layout']['yaxis3']['type'] = 'log'
-    return fig
 
 
 app.css.append_css({
