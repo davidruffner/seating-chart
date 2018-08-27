@@ -16,19 +16,19 @@ app.scripts.config.serve_locally = True
 
 # TODO: Guest list data should only be in the displayed table (No global state!)
 NUM_TABLES = 15
-GUEST_LIST = pd.read_csv('example/guestlist.csv')
-GUEST_LIST['friends'] = ''
-NUM_GUESTS = len(GUEST_LIST)
+GUEST_LIST_INPUT = pd.read_csv('example/guestlist.csv')
+GUEST_LIST_INPUT['friends'] = ''
+NUM_GUESTS = len(GUEST_LIST_INPUT)
 GUESTS_PER_TABLE = NUM_GUESTS // NUM_TABLES
 NUM_LEFTOVER_GUESTS = NUM_GUESTS % NUM_TABLES
-GUEST_LIST['Table'] = 1 + np.arange(0, NUM_GUESTS) // (GUESTS_PER_TABLE + 1 if NUM_LEFTOVER_GUESTS else 0)
-
+GUEST_LIST_INPUT['Table'] = 1 + np.arange(0, NUM_GUESTS) // (GUESTS_PER_TABLE + 1 if NUM_LEFTOVER_GUESTS else 0)
+GUEST_LIST_INPUT['Table'] = GUEST_LIST_INPUT['Table'].apply(str)
 
 
 app.layout = html.Div([
     html.H4('Guest List'),
     dt.DataTable(
-        rows=GUEST_LIST.to_dict('records'),
+        rows=GUEST_LIST_INPUT.to_dict('records'),
 
         # optional - sets the order of columns
         # columns=sorted(DF_GAPMINDER.columns),
@@ -78,6 +78,7 @@ def update_figure(rows, selected_row_indices):
 
     for tableNum, tableGroup in df.groupby('Table'):
         lg = len(tableGroup)
+        tableNum = int(tableNum)
         df.loc[tableGroup.index, 'x'] = tableNum // 2
         df.loc[tableGroup.index, 'y'] = tableNum % 2 + .9 * np.arange(lg)/float(lg)
 
