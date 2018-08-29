@@ -192,11 +192,14 @@ def sortTables(tableActionData, rows, selectedRowIndices):
         guestlist.guests = [sc.Guest(name) for name in df['Guest Name']]
         guestlist.guestdict = {g.get_name(): g for g in guestlist.guests}
 
-        # # Find all the friends
-        # for rownum in df.index:
-        #     friends = [str(name) for name in df.loc[rownum].values if name is not np.nan]
-        #     # TODO: Is this correct?
-        #     [self.guestdict[friend].set_friendnames(friends) for friend in friends]
+        # Find all the friends
+        for rownum in df.index:
+            friend = df.loc[rownum, 'Guest Name']
+            friends = [f.strip() for f in df.loc[rownum, 'friends'].split(' ,')]
+            friends = [f for f in friends if f]
+            guestlist.guestdict[friend].set_friendnames(friends)
+
+
         return df.to_dict('records')
     elif tableAction == 'friend':
         names = df.loc[selectedRowIndices, 'Guest Name'].values.tolist()
