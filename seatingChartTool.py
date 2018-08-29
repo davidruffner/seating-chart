@@ -12,6 +12,8 @@ import numpy as np
 import plotly
 import plotly.graph_objs as go
 
+import seatingChart.seatingchart as sc
+
 app = dash.Dash()
 
 app.scripts.config.serve_locally = True
@@ -41,9 +43,10 @@ app.layout = html.Div([
         selected_row_indices=[],
         id='guest-list'
     ),
-    html.Div(id='Sorter'),
     html.Button(id='button-friend', n_clicks=0, children='Make friends'),
+    html.Button(id='sorter', n_clicks=0, children='Sort!'),
     html.A('Download CSV', id='my-link'),
+    html.Div(id='table-action'),
     dcc.Graph(
         id='graph-guest-sorter'
     ),
@@ -149,6 +152,54 @@ def download_csv():
                            as_attachment=True)
     return file
 
+
+@app.callback(
+    Output('table-action', 'children'),
+    [Input('button-friend', 'n_clicks'),
+     Input('sorter', 'n_clicks')],
+    [State('table-action', 'children')]
+)
+def decideTableAction(nclicksF, nclicksS, tableActionData):
+    if tableActionData is None:
+        return json.dumps((None, nclicksF, nclicksS))
+
+    tableAction, oldNclicksF, oldNclicksS = json.loads(tableActionData)
+    newClickF, newClickS = nclicksF - oldNclicksF, nclicksS - oldNclicksS
+
+    if newClickF:
+        return json.dumps(('friend', nclicksF, nclicksS))
+    elif newClickS:
+        return json.dumps(('sort', nclicksF, nclicksS))
+    else:
+        raise Exception
+
+
+@app.callback(
+    Output('guest-list', 'rows'),
+    [Input('table-action', 'children')],
+    [State('guest-list', 'rows')]
+)
+def sortTables(tableActionData, rows):
+    if tableActionData is None:
+        return pd.DataFrame(rows).to_dict('records')
+    tableAction, _, _ = json.loads(tableActionData)
+
+    df = pd.DataFrame(rows)
+    if tableAction == 'sort':
+        guestlist = sc.GuestList()
+        guestlist.guests = [sc.Guest(name) for name in df['Guest Name']]
+        guestlist.guestdict = {g.get_name(): g for g in guestlist.guests}
+
+        # # Find all the friends
+        # for rownum in df.index:
+        #     friends = [str(name) for name in df.loc[rownum].values if name is not np.nan]
+        #     # TODO: Is this correct?
+        #     [self.guestdict[friend].set_friendnames(friends) for friend in friends]
+        return df.to_dict('records')
+    elif tableAction == 'friend':
+        return df.to_dict('records')
+
+    return df.to_dict('records')
 
 
 app.css.append_css({
