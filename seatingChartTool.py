@@ -1,8 +1,11 @@
+import base64
 import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dt
+import flask
+import io
 import json
 import pandas as pd
 import numpy as np
@@ -40,6 +43,7 @@ app.layout = html.Div([
     ),
     html.Div(id='Sorter'),
     html.Button(id='button-friend', n_clicks=0, children='Make friends'),
+    html.A('Download CSV', id='my-link'),
     dcc.Graph(
         id='graph-guest-sorter'
     ),
@@ -118,6 +122,33 @@ def update_figure(rows, selected_row_indices):
             hovermode='closest'
         )
     }
+
+
+@app.callback(Output('my-link', 'href'), [Input('guest-list', 'rows')])
+def update_link(rows):
+    df = pd.DataFrame(rows)
+
+    buffer = io.StringIO()  #creating an empty buffer
+    df.to_csv(buffer, index=False)  #filling that buffer
+    buffer.seek(0) #set to the start of the stream
+    dfEncoded = base64.b64encode(buffer.getvalue().encode('utf-8'))
+    buffer.close()
+    return '/dash/urlToDownload3?value=' + dfEncoded.decode("utf-8")
+
+
+@app.server.route('/dash/urlToDownload3')
+def download_csv():
+    value = flask.request.args.get('value')
+
+    mem = io.BytesIO()
+    mem.write(base64.b64decode(value))
+    mem.seek(0)
+    file = flask.send_file(mem,
+                           mimetype='text/csv',
+                           attachment_filename='downloadFile.csv',
+                           as_attachment=True)
+    return file
+
 
 
 app.css.append_css({
