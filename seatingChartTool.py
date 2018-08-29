@@ -1,4 +1,5 @@
 import base64
+import copy
 import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
@@ -177,9 +178,10 @@ def decideTableAction(nclicksF, nclicksS, tableActionData):
 @app.callback(
     Output('guest-list', 'rows'),
     [Input('table-action', 'children')],
-    [State('guest-list', 'rows')]
+    [State('guest-list', 'rows'),
+     State('guest-list', 'selected_row_indices')]
 )
-def sortTables(tableActionData, rows):
+def sortTables(tableActionData, rows, selectedRowIndices):
     if tableActionData is None:
         return pd.DataFrame(rows).to_dict('records')
     tableAction, _, _ = json.loads(tableActionData)
@@ -197,6 +199,17 @@ def sortTables(tableActionData, rows):
         #     [self.guestdict[friend].set_friendnames(friends) for friend in friends]
         return df.to_dict('records')
     elif tableAction == 'friend':
+        names = df.loc[selectedRowIndices, 'Guest Name'].values.tolist()
+        for i in selectedRowIndices:
+            namesTemp = copy.copy(names)
+            namesTemp.remove(df.loc[i, 'Guest Name'])
+            if df.loc[i, 'friends']:
+                oldFriends = df.loc[i, 'friends'].split(',')
+                oldFriends = [f.strip() for f in oldFriends]
+                friends = set(oldFriends + namesTemp)
+            else:
+                friends = set(namesTemp)
+            df.loc[i, 'friends'] = ', '.join(friends)
         return df.to_dict('records')
 
     return df.to_dict('records')
