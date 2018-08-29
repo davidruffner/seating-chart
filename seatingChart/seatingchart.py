@@ -199,7 +199,11 @@ class SeatingChart(object):
         if len(self.seated) == 0:
             return None
         randguestname = random.choice(self.seated)
-        index = self.seatdict[randguestname]
+        try:
+            index = self.seatdict[randguestname]
+        except:
+            print('Can not find {}'.format(randguestname))
+            return None
         # update lists and dictionaries
 
         self.chart[index[0]][index[1]] = ''
