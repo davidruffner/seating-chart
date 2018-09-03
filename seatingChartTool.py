@@ -21,14 +21,25 @@ app.scripts.config.serve_locally = True
 # app.css.config.serve_locally = True
 
 # TODO: Guest list data should only be in the displayed table (No global state!)
-NUM_TABLES = 15
+NUM_TABLES = 11
+GUESTS_PER_TABLE = 10
+import itertools
+
+seatTableNumbersNested = [[i + 1] * GUESTS_PER_TABLE for i in range(NUM_TABLES)]
+seatTableNumbers = list(itertools.chain.from_iterable(seatTableNumbersNested))
+
 GUEST_LIST_INPUT = pd.read_csv('example/guestlist.csv')
 GUEST_LIST_INPUT['friends'] = ''
 NUM_GUESTS = len(GUEST_LIST_INPUT)
-GUESTS_PER_TABLE = NUM_GUESTS // NUM_TABLES
-NUM_LEFTOVER_GUESTS = NUM_GUESTS % NUM_TABLES
-GUEST_LIST_INPUT['Table'] = 1 + np.arange(0, NUM_GUESTS) // (GUESTS_PER_TABLE + 1 if NUM_LEFTOVER_GUESTS else 0)
-GUEST_LIST_INPUT['Table'] = GUEST_LIST_INPUT['Table'].apply(str)
+
+for i, seatTableNumber in enumerate(seatTableNumbers):
+    try:
+        row = GUEST_LIST_INPUT.loc[i]
+        GUEST_LIST_INPUT.loc[i, 'Table'] = seatTableNumber
+    except KeyError:
+        GUEST_LIST_INPUT.loc[i, 'Table'] = seatTableNumber
+        GUEST_LIST_INPUT.loc[i, 'Guest Name'] = 'Empty'
+        GUEST_LIST_INPUT.loc[i, 'friends'] = ''
 
 
 app.layout = html.Div([
@@ -48,20 +59,20 @@ app.layout = html.Div([
     html.Button(id='sorter', n_clicks=0, children='Sort!'),
     html.A('Download CSV', id='my-link'),
     html.Div(id='table-action'),
+    html.H1(id='friend-count', children='Number of friendships:'),
     dcc.Graph(
         id='graph-guest-sorter'
     ),
 ], className='container')
 
 
-
-# TODO: Callback for button
-# @app.callback(
-#     Output('guest-list', 'selected_row_indices'),
-#     [Input('submit-button', 'n_clicks')],
-#     [State('guest-list', 'selected_row_indices')])
-# )
-# def
+@app.callback(
+    Output('friend-count', 'children'),
+    [Input('guest-list', 'rows')]
+)
+def countFriends(rows):
+    df = pd.DataFrame(rows)
+    return 'Number of friendships: {}'.format(sc.countFriendships(df))
 
 @app.callback(
     Output('guest-list', 'selected_row_indices'),

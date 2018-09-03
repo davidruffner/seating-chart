@@ -10,6 +10,27 @@ Modifications:
  3/9/2014  written by David Ruffner
 """
 
+def countFriendships(guestList):
+    """
+    Counts friendships at tables of all guests. A friendship is counted if two
+    friends are at the same table.
+
+    Inputs
+    ------
+    :param guestList: Pandas DataFrame
+        Dataframe of all guests. Need 'Guest Name', 'friends', and 'Table'
+        columns
+    """
+
+    friendships = 0
+    for i, g in guestList.groupby('Table'):
+        guestsAtTable = set(g.loc[:, 'Guest Name'].values)
+        for j in g.index:
+            guestFriends = {f.strip() for f in g.loc[j, 'friends'].split(',')}
+            friendships += len(guestFriends.intersection(guestsAtTable)) / 2
+
+    return friendships
+
 
 class Guest(object):
     def __init__(self, name, friends=None):
