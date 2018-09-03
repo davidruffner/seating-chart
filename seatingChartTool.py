@@ -199,41 +199,11 @@ def sortTables(tableActionData, rows, selectedRowIndices):
 
     df = pd.DataFrame(rows)
     if tableAction == 'sort':
-        guestlist = sc.GuestList()
-        guestlist.guests = [sc.Guest(name) for name in df['Guest Name']]
-        guestlist.guestdict = {g.get_name(): g for g in guestlist.guests}
-
-        # Find all the friends
-        for rownum in df.index:
-            friend = df.loc[rownum, 'Guest Name']
-            friends = [f.strip() for f in df.loc[rownum, 'friends'].split(' ,')]
-            friends = [f for f in friends if f]
-            guestlist.guestdict[friend].set_friendnames(friends)
-
-        # Metropolis search algorithm
-        nguests = len(guestlist.guests)
-        seatsper = GUESTS_PER_TABLE
-
-        chart = sc.SeatingChart(guestlist, nguests//seatsper, seatsper)
-
-        org = sc.Organizer(guestlist, chart)
-        org.seatguestsfriends()
-
         print("now do Metropolis algorithim to increase friendships")
-
         nsteps = 1000
-        steps = np.arange(nsteps)
-        for i in steps:
-            print(org.metropolisstep(temp=.01))
-
-
-        for rownum in df.index:
-            try:
-                table, seat = chart.seatdict[df.loc[rownum, 'Guest Name']]
-            except:
-                continue
-            df.loc[rownum, 'Table'] = table
-
+        for i in range(nsteps):
+            temp = 0.1
+            df = sc.metropolisStep(df, temp)
         return df.to_dict('records')
     elif tableAction == 'friend':
         names = df.loc[selectedRowIndices, 'Guest Name'].values.tolist()

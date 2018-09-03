@@ -10,6 +10,44 @@ Modifications:
  3/9/2014  written by David Ruffner
 """
 
+
+def metropolisStep(guestList, temp):
+    # First check the number of friends to get a baseline
+    friendcount0 = countFriendships(guestList)
+
+    # Switch two random guest their seats
+    t1, t2 = np.random.choice(np.unique(guestList['Table'].values), 2, replace=False)
+    guestsT1 = guestList.loc[guestList.loc[:, 'Table'] == t1]
+    guestsT2 = guestList.loc[guestList.loc[:, 'Table'] == t2]
+
+    guest1Index = np.random.choice(guestsT1.index, 1)
+    guest2Index = np.random.choice(guestsT2.index, 1)
+
+    guestList.loc[guest1Index, 'Table'] = t2
+    guestList.loc[guest2Index, 'Table'] = t1
+
+    # First check the number of friends again to see if it improved
+    friendcount1 = countFriendships(guestList)
+
+    if friendcount1 >= friendcount0:
+        # If there are more friends than keep the switch!
+        print("Made the switch")
+        return guestList
+    else:
+        delfriends = friendcount1 - friendcount0
+        expdelfriends = np.exp(delfriends / temp)
+        rand = random.random()
+        if rand >= expdelfriends:
+            # if there are fewer friends then put it back
+            print("better to keep the old way")
+            guestList.loc[guest1Index, 'Table'] = t1
+            guestList.loc[guest2Index, 'Table'] = t2
+            return guestList
+        else:
+            print("it's temporarily worse but keep it")
+            return guestList
+
+
 def countFriendships(guestList):
     """
     Counts friendships at tables of all guests. A friendship is counted if two
